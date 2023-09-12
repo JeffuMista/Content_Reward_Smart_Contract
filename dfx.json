@@ -1,0 +1,13 @@
+{
+    "canisters": {
+      "content_reward": {
+        "main": "src/index.ts",
+        "type": "custom",
+        "build": "npx azle content_reward",
+        "root": "src",
+        "ts": "src/index.ts",
+        "candid": "src/index.did",
+        "wasm": ".azle/content_reward/content_reward.wasm.gz"
+      }
+    }
+  }

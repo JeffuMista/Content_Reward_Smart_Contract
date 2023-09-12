@@ -38,6 +38,10 @@ const entryStorage = new StableBTreeMap<string, Entry>(0, 44, 1024);
 // Create a new entry
 $update;
 export function createEntry(title: string, body: string, author: string, action : string, rewardPoints: number): Result<Entry, string> {
+  if (!title || !body || !author || !action || isNaN(rewardPoints)) {
+    return Result.Err('Invalid input. All fields must be provided, and rewardPoints must be a number.');
+  }
+
   const entry: Entry = {
     id: uuidv4(),
     author: author,
@@ -49,6 +53,7 @@ export function createEntry(title: string, body: string, author: string, action 
     rewardPoints: rewardPoints,
   };
   entryStorage.insert(entry.id, entry); {
+
     if (entry.action === "New") { 
       entry.rewardPoints = 100} 
       else  {
@@ -70,6 +75,10 @@ export function readEntry(id: string): Result<Entry, string> {
 // Update an existing entry's content and timestamp
 $update;
 export function updateEntry(id: string, payload: EntryPayload): Result<Entry, string> {
+  if (!id || !payload) {
+    return Result.Err('Invalid input. Both id and payload must be provided.');
+  }
+
   return match(entryStorage.get(id), {
   Some : (entry) => {
     const updatedEntry : Entry = {...entry, ...payload, updatedAt: Opt.Some(ic.time())};
@@ -91,22 +100,6 @@ export function deleteEntry(id: string): Result<Entry, string> {
   })
 }
 
-// // Function to reward an entry
-// $update;
-// export function rewardMessage(id: string, points: nat64): Result<Entry, string> {
-//   return match(entryStorage.get(id), {
-//     Some: (entry) => {
-//       const updatedEntry: Entry = {
-//         ...entry,
-//         rewardPoints: (entry.rewardPoints + parseInt(points)),
-//       };
-//       entryStorage.insert(id, updatedEntry);
-//       return Result.Ok(null);
-//     },
-//     None: () => Result.Err("Message not found"),
-//   });
-// }
-
 // Function to get entries with their reward points
 $query;
 export function getEntriesWithRewards( ): Result<Vec<Entry>, string> {
@@ -117,11 +110,19 @@ export function getEntriesWithRewards( ): Result<Vec<Entry>, string> {
 // };
 
 $query;
-export function getRedeemableRewards(rewardPoints: string): Result<Entry, string> {
-  return match(entryStorage.get(rewardPoints),{
-    Some: (redeemableRewards) => Result.Ok<Entry, string>(redeemableRewards), 
-    None: () => Result.Err<Entry, string>(`Could not find and entry with the ${rewardPoints}. Entries not found`)}
-  )};
+// Function to get redeemable rewards based on rewardPoints
+export function getRedeemableRewards(rewardPoints: string): Result<Vec<RedeemableReward>, string> {
+  if (!rewardPoints || isNaN(Number(rewardPoints))) {
+    return Result.Err('Invalid input. rewardPoints must be provided and be a number.');
+  }
+  const redeemableRewards: Vec<RedeemableReward> = /* Logic to retrieve redeemable rewards based on rewardPoints */;
+  
+  if (redeemableRewards.length > 0) {
+    return Result.Ok(redeemableRewards);
+  } else {
+    return Result.Err(`No entries have redeemable rewards for rewardPoints: ${rewardPoints}`);
+  }
+}
 
 
 type MessagePayload = Record<{

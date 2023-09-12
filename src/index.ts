@@ -123,31 +123,6 @@ export function getRedeemableRewards(rewardPoints: string): Result<Entry, string
     None: () => Result.Err<Entry, string>(`Could not find and entry with the ${rewardPoints}. Entries not found`)}
   )};
 
-// $update;
-// export function redeemReward(action: string): Result<null, string> {
-//     const reward = redeemableRewards.find(reward => reward.action == action);
-//     if (!reward) {
-//         return Result.Err<null, string>('Reward not found');
-//     }
-
-    // const entry = entryStorage.get(action);
-    // None: () => {
-    //     return Result.Err<null, string>('Message not found');
-    // }
-
-    // const existingEntry = entry.unwrap();
-    // if (existingEntry.rewardPoints < reward.cost) {
-    //     return Result.Err<null, string>('Insufficient reward points');
-    // }
-
-    // const updatedEntry: Entry = {
-//         ...existingEntry,
-//         rewardPoints: existingEntry.rewardPoints - reward.cost
-//     };
-
-//     entryStorage.insert(action, updatedEntry);
-//     return Result.Ok<null, string>(null);
-// }
 
 type MessagePayload = Record<{
     title: string;

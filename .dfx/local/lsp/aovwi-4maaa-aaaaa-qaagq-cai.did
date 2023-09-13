@@ -1,0 +1,27 @@
+type Entry = record {
+  id : text;
+  title : text;
+  action : text;
+  body : text;
+  createdAt : nat64;
+  rewardPoints : float64;
+  author : text;
+  updatedAt : opt nat64;
+};
+type EntryPayload = record {
+  title : text;
+  action : text;
+  body : text;
+  rewardPoints : float64;
+  author : text;
+};
+type _AzleResult = variant { Ok : Entry; Err : text };
+type _AzleResult_1 = variant { Ok : vec Entry; Err : text };
+service : {
+  createEntry : (EntryPayload) -> (_AzleResult);
+  deleteEntry : (text) -> (_AzleResult);
+  getEntriesWithRewards : () -> (_AzleResult_1) query;
+  getRedeemableRewards : (text) -> (_AzleResult_1) query;
+  readEntry : (text) -> (_AzleResult) query;
+  updateEntry : (text, EntryPayload) -> (_AzleResult);
+}

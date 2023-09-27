@@ -17,7 +17,7 @@ type EntryPayload = record {
 };
 type _AzleResult = variant { Ok : Entry; Err : text };
 type _AzleResult_1 = variant { Ok : vec Entry; Err : text };
-service : () -> {
+service : {
   createEntry : (EntryPayload) -> (_AzleResult);
   deleteEntry : (text) -> (_AzleResult);
   getEntriesWithRewards : () -> (_AzleResult_1) query;

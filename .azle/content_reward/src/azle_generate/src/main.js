@@ -11,7 +11,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.getRedeemableRewards = exports.getEntriesWithRewards = exports.deleteEntry = exports.updateEntry = exports.readEntry = exports.createEntry = exports.Principal = void 0;
+exports.getEntriesWithRewards = exports.deleteEntry = exports.updateEntry = exports.readEntry = exports.createEntry = exports.Principal = void 0;
 function _defineProperty(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -1438,71 +1438,94 @@ function v4(options, buf, offset) {
 var v4_default = v4;
 // src/index.ts
 var entryStorage = new StableBTreeMap(0, 44, 1024);
-function createEntry(title, body, author, action, rewardPoints) {
+function createEntry(payload) {
+    if (!payload.author || !payload.title || !payload.body) {
+        return Result.Err("Invalid entry. Please fill in the provided fields");
+    }
     const entry = {
         id: v4_default(),
-        author,
-        title,
-        body,
-        action,
+        author: payload.author,
+        title: payload.title,
+        body: payload.body,
+        action: "New Entry",
         createdAt: ic.time(),
         updatedAt: Opt.None,
-        rewardPoints
+        rewardPoints: 100
     };
     entryStorage.insert(entry.id, entry);
-    {
-        if (entry.action === "New") {
-            entry.rewardPoints = 100;
-        } else {
-            entry.rewardPoints = 50;
-        }
-        return Result.Ok(entry);
-    }
+    return Result.Ok(entry);
 }
 exports.createEntry = createEntry;
 function readEntry(id) {
-    return match(entryStorage.get(id), {
-        Some: (entry)=>Result.Ok(entry)
-        ,
-        None: ()=>Result.Err(`an entry with id=${id} not found`)
-    });
+    try {
+        return match(entryStorage.get(id), {
+            Some: (entry)=>Result.Ok(entry)
+            ,
+            None: ()=>Result.Err(`Entry not found. Please enter the correct ID`)
+        });
+    } catch (error) {
+        return Result.Err(`an error occurred while reading entry with id=${id}`);
+    }
 }
 exports.readEntry = readEntry;
-function updateEntry(id, payload) {
-    return match(entryStorage.get(id), {
+function updateEntry(id, payload2) {
+    if (!payload2.body) return match(entryStorage.get(id), {
         Some: (entry)=>{
-            const updatedEntry = _objectSpread({}, entry, payload, {
-                updatedAt: Opt.Some(ic.time())
+            const unchangedEntry = _objectSpread({}, entry, payload2, {
+                author: entry.author,
+                action: `Entry ${id} Not Updated`,
+                title: entry.title,
+                body: entry.body,
+                rewardPoints: entry.rewardPoints
+            });
+            entryStorage.insert(entry.id, unchangedEntry);
+            return Result.Ok(unchangedEntry);
+        },
+        None: ()=>{
+            return Result.Err(`Could not update a message. Please provide the entry ID and update the body/content field`);
+        }
+    });
+    if (payload2.body) return match(entryStorage.get(id), {
+        Some: (entry)=>{
+            const updatedEntry = _objectSpread({}, entry, payload2, {
+                action: `Entry ${id} Updated`,
+                updatedAt: Opt.Some(ic.time()),
+                rewardPoints: entry.rewardPoints + 50,
+                author: entry.author,
+                title: entry.title
             });
             entryStorage.insert(entry.id, updatedEntry);
             return Result.Ok(updatedEntry);
         },
         None: ()=>{
-            return Result.Err(`Could not update a message with id=${id}. Entry not found`);
+            return Result.Err(`Could not update a message. Please provide the entry ID and update the content/body field`);
         }
     });
+    else {
+        return Result.Err(`an error occurred while updating entry. Make sure you include the entry ID and only make changes to the content/body field`);
+    }
 }
 exports.updateEntry = updateEntry;
 function deleteEntry(id) {
-    return match(entryStorage.remove(id), {
-        Some: (deletedEntry)=>Result.Ok(deletedEntry)
-        ,
-        None: ()=>Result.Err(`couldn't delete an entry with id=${id}. Entry not found.`)
-    });
+    try {
+        return match(entryStorage.remove(id), {
+            Some: (deletedEntry)=>Result.Ok(deletedEntry)
+            ,
+            None: ()=>Result.Err(`couldn't delete entry with id=${id}. Entry not found.`)
+        });
+    } catch (error) {
+        return Result.Err(`Entry not found. Please enter the correct ID}`);
+    }
 }
 exports.deleteEntry = deleteEntry;
 function getEntriesWithRewards() {
-    return Result.Ok(entryStorage.values());
+    try {
+        return Result.Ok(entryStorage.values());
+    } catch (error) {
+        return Result.Err(`An error occurred: ${error}`);
+    }
 }
 exports.getEntriesWithRewards = getEntriesWithRewards;
-function getRedeemableRewards(rewardPoints) {
-    return match(entryStorage.get(rewardPoints), {
-        Some: (redeemableRewards)=>Result.Ok(redeemableRewards)
-        ,
-        None: ()=>Result.Err(`Could not find and entry with the ${rewardPoints}. Entries not found`)
-    });
-}
-exports.getRedeemableRewards = getRedeemableRewards;
 globalThis.crypto = {
     getRandomValues: ()=>{
         let array = new Uint8Array(32);

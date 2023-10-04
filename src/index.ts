@@ -19,7 +19,6 @@ type Entry = Record<{
   author: string;
   title: string;
   body: string;
-  // cost: number;
   createdAt: nat64;
   updatedAt: Opt<nat64>;
   action: string;
@@ -30,18 +29,21 @@ type EntryPayload = Record<{
   author: string;
   title: string;
   body: string;
-  action: string;
-  rewardPoints: number;
+}>;
+type UpdatePayload = Record<{
+  body: string
 }>;
 type RedeemableReward = Record<{
+  id: string;
   title: string;
-  cost: number;
-  action: string;
+  author: string;
+  rewardPoints: number;
 }>;
 type RedeemableRewardPayload = Record<{
+  id: string;
   title: string;
-  action: string;
-  points: number;
+  author: string;
+  rewardPoints: number;
 }>;
 
 const entryStorage = new StableBTreeMap<string, Entry>(0, 44, 1024);
@@ -54,11 +56,10 @@ export function createEntry(payload: EntryPayload): Result<Entry, string> {
   if (
     !payload.author ||
     !payload.title ||
-    !payload.action ||
-    !payload.body ||
-    !payload.rewardPoints
+    !payload.body 
   ) {
-    return Result.Err<Entry, string>("Invalid payload");
+    return Result.Err<Entry, string>
+    ("Invalid entry. Please fill in the provided fields");
   }
 
   const entry: Entry = {
@@ -66,20 +67,11 @@ export function createEntry(payload: EntryPayload): Result<Entry, string> {
     author: payload.author,
     title: payload.title,
     body: payload.body,
-    action: payload.action,
+    action: "New Entry",
     createdAt: ic.time(),
     updatedAt: Opt.None,
-    rewardPoints: payload.rewardPoints,
+    rewardPoints: 100,
   };
-
-  // switch (entry.action) {
-  //   case "New":
-  //     entry.rewardPoints = 100;
-  //     break;
-  //   default:
-  //     entry.rewardPoints = 50;
-  //     break;
-  // }
 
   entryStorage.insert(entry.id, entry);
 
@@ -92,7 +84,8 @@ export function readEntry(id: string): Result<Entry, string> {
   try {
     return match(entryStorage.get(id), {
       Some: (entry) => Result.Ok<Entry, string>(entry),
-      None: () => Result.Err<Entry, string>(`Entry with id=${id} not found`),
+      None: () => Result.Err<Entry, string>
+      (`Entry not found. Please enter the correct ID`),
     });
   } catch (error) {
     return Result.Err<Entry, string>(
@@ -105,42 +98,63 @@ export function readEntry(id: string): Result<Entry, string> {
 $update;
 export function updateEntry(
   id: string,
-  payload: EntryPayload
+  payload2: UpdatePayload,
 ): Result<Entry, string> {
   // Validate the payload before processing it
   if (
-    !payload.author ||
-    !payload.title ||
-    !payload.action ||
-    !payload.body ||
-    !payload.rewardPoints
-  ) {
-    return Result.Err<Entry, string>("Invalid payload");
+    !payload2.body
+  ) 
+    return match(entryStorage.get(id), {
+      Some: (entry) => {
+    const unchangedEntry : Entry = {
+      ...entry,
+      ...payload2,
+      author: entry.author,
+      action: `Entry ${id} Not Updated`,
+      title: entry.title,
+      body: entry.body,
+      rewardPoints: entry.rewardPoints
+    };
+    entryStorage.insert(entry.id, unchangedEntry)
+    return Result.Ok<Entry, string> (unchangedEntry)
+      },
+      None: () => {
+    return Result.Err<Entry, string>
+    (`Could not update a message. Please provide the entry ID and update the body/content field`)
   }
-
-  try {
+});
+// Validate the payload before processing it
+    if (
+      payload2.body 
+    )
     return match(entryStorage.get(id), {
       Some: (entry) => {
         const updatedEntry: Entry = {
           ...entry,
-          ...payload,
+          ...payload2,
+          action: `Entry ${id} Updated`,
           updatedAt: Opt.Some(ic.time()),
+          rewardPoints: entry.rewardPoints + 50,
+          author: entry.author,
+          title: entry.title
         };
+        // 
         entryStorage.insert(entry.id, updatedEntry);
+        
         return Result.Ok<Entry, string>(updatedEntry);
       },
       None: () => {
         return Result.Err<Entry, string>(
-          `Could not update a message with id=${id}. Entry not found`
+          `Could not update a message. Please provide the entry ID and update the content/body field`
         );
       },
     });
-  } catch (error) {
+   else  {
     return Result.Err<Entry, string>(
-      `an error occurred while updating entry with id=${id}`
+      `an error occurred while updating entry. Make sure you include the entry ID and only make changes to the content/body field`
     );
   }
-}
+};
 
 // Delete an entry by ID
 $update;
@@ -153,54 +167,23 @@ export function deleteEntry(id: string): Result<Entry, string> {
           `couldn't delete entry with id=${id}. Entry not found.`
         ),
     });
-  } catch (error) {
+  } 
+  catch (error) {
     return Result.Err<Entry, string>(
-      `An error occurred while deleting the entry with id=${id}. Error: ${error}`
+      `Entry not found. Please enter the correct ID}`
     );
   }
 }
 
-// // Function to reward an entry
-// $update;
-// export function rewardMessage(id: string, points: nat64): Result<Entry, string> {
-//   return match(entryStorage.get(id), {
-//     Some: (entry) => {
-//       const updatedEntry: Entry = {
-//         ...entry,
-//         rewardPoints: (entry.rewardPoints + parseInt(points)),
-//       };
-//       entryStorage.insert(id, updatedEntry);
-//       return Result.Ok(null);
-//     },
-//     None: () => Result.Err("Message not found"),
-//   });
-// }
-
-// Function to get entries with their reward points
 $query;
 export function getEntriesWithRewards(): Result<Vec<Entry>, string> {
   try {
     return Result.Ok(entryStorage.values());
-  } catch (error) {
+  } 
+  catch (error) {
     return Result.Err(`An error occurred: ${error}`);
   }
-}
-
-$query;
-export function getRedeemableRewards(
-  rewardPoints: string
-): Result<Vec<Entry>, string> {
-  const matchingEntries = entryStorage
-    .values()
-    .filter((entry) => entry.rewardPoints.toString() === rewardPoints);
-  if (matchingEntries.length > 0) {
-    return Result.Ok<Vec<Entry>, string>(matchingEntries);
-  } else {
-    return Result.Err<Vec<Entry>, string>(
-      `Could not find any entries with the ${rewardPoints}. Entries not found`
-    );
-  }
-}
+};
 
 type MessagePayload = Record<{
   title: string;
@@ -219,3 +202,4 @@ globalThis.crypto = {
     return array;
   },
 };
+

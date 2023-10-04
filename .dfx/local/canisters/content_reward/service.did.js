@@ -1,4 +1,9 @@
 export const idlFactory = ({ IDL }) => {
+  const EntryPayload = IDL.Record({
+    'title' : IDL.Text,
+    'body' : IDL.Text,
+    'author' : IDL.Text,
+  });
   const Entry = IDL.Record({
     'id' : IDL.Text,
     'title' : IDL.Text,
@@ -14,24 +19,13 @@ export const idlFactory = ({ IDL }) => {
     'Ok' : IDL.Vec(Entry),
     'Err' : IDL.Text,
   });
-  const EntryPayload = IDL.Record({
-    'title' : IDL.Text,
-    'action' : IDL.Text,
-    'body' : IDL.Text,
-    'rewardPoints' : IDL.Float64,
-    'author' : IDL.Text,
-  });
+  const UpdatePayload = IDL.Record({ 'body' : IDL.Text });
   return IDL.Service({
-    'createEntry' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Float64],
-        [_AzleResult],
-        [],
-      ),
+    'createEntry' : IDL.Func([EntryPayload], [_AzleResult], []),
     'deleteEntry' : IDL.Func([IDL.Text], [_AzleResult], []),
     'getEntriesWithRewards' : IDL.Func([], [_AzleResult_1], ['query']),
-    'getRedeemableRewards' : IDL.Func([IDL.Text], [_AzleResult], ['query']),
     'readEntry' : IDL.Func([IDL.Text], [_AzleResult], ['query']),
-    'updateEntry' : IDL.Func([IDL.Text, EntryPayload], [_AzleResult], []),
+    'updateEntry' : IDL.Func([IDL.Text, UpdatePayload], [_AzleResult], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

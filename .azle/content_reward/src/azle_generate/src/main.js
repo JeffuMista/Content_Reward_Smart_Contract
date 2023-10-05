@@ -11,7 +11,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.getEntriesWithRewards = exports.deleteEntry = exports.updateEntry = exports.readEntry = exports.createEntry = exports.Principal = void 0;
+exports.entriesWithRewardsLength = exports.getEntriesWithRewards = exports.deleteEntry = exports.updateEntry = exports.readEntry = exports.createEntry = exports.Principal = void 0;
 function _defineProperty(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -1526,6 +1526,14 @@ function getEntriesWithRewards() {
     }
 }
 exports.getEntriesWithRewards = getEntriesWithRewards;
+function entriesWithRewardsLength() {
+    try {
+        return Result.Ok(Number(entryStorage.len()));
+    } catch (error) {
+        return Result.Err(`An error occurred: ${error}`);
+    }
+}
+exports.entriesWithRewardsLength = entriesWithRewardsLength;
 globalThis.crypto = {
     getRandomValues: ()=>{
         let array = new Uint8Array(32);

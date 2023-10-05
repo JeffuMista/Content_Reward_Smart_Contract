@@ -19,12 +19,15 @@ export interface EntryPayload {
 export interface UpdatePayload { 'body' : string }
 export type _AzleResult = { 'Ok' : Entry } |
   { 'Err' : string };
-export type _AzleResult_1 = { 'Ok' : Array<Entry> } |
+export type _AzleResult_1 = { 'Ok' : number } |
+  { 'Err' : string };
+export type _AzleResult_2 = { 'Ok' : Array<Entry> } |
   { 'Err' : string };
 export interface _SERVICE {
   'createEntry' : ActorMethod<[EntryPayload], _AzleResult>,
   'deleteEntry' : ActorMethod<[string], _AzleResult>,
-  'getEntriesWithRewards' : ActorMethod<[], _AzleResult_1>,
+  'entriesWithRewardsLength' : ActorMethod<[], _AzleResult_1>,
+  'getEntriesWithRewards' : ActorMethod<[], _AzleResult_2>,
   'readEntry' : ActorMethod<[string], _AzleResult>,
   'updateEntry' : ActorMethod<[string, UpdatePayload], _AzleResult>,
 }

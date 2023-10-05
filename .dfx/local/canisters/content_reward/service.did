@@ -11,11 +11,13 @@ type Entry = record {
 type EntryPayload = record { title : text; body : text; author : text };
 type UpdatePayload = record { body : text };
 type _AzleResult = variant { Ok : Entry; Err : text };
-type _AzleResult_1 = variant { Ok : vec Entry; Err : text };
+type _AzleResult_1 = variant { Ok : float64; Err : text };
+type _AzleResult_2 = variant { Ok : vec Entry; Err : text };
 service : {
   createEntry : (EntryPayload) -> (_AzleResult);
   deleteEntry : (text) -> (_AzleResult);
-  getEntriesWithRewards : () -> (_AzleResult_1) query;
+  entriesWithRewardsLength : () -> (_AzleResult_1) query;
+  getEntriesWithRewards : () -> (_AzleResult_2) query;
   readEntry : (text) -> (_AzleResult) query;
   updateEntry : (text, UpdatePayload) -> (_AzleResult);
 }

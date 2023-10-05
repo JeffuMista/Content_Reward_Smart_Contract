@@ -49,7 +49,7 @@ type RedeemableRewardPayload = Record<{
 const entryStorage = new StableBTreeMap<string, Entry>(0, 44, 1024);
 // CRUD Functions
 
-// Create a new entry
+// Create a new entry. The function also rewards the user with 100 points for the entry.
 $update;
 export function createEntry(payload: EntryPayload): Result<Entry, string> {
   // Validate the payload before processing it
@@ -94,7 +94,7 @@ export function readEntry(id: string): Result<Entry, string> {
   }
 }
 
-// Update an existing entry's content and timestamp
+// Update an existing entry's content and timestamp. The process also rewards the user with 50 points per update.
 $update;
 export function updateEntry(
   id: string,
@@ -174,12 +174,22 @@ export function deleteEntry(id: string): Result<Entry, string> {
     );
   }
 }
-
+//Check all the entries within the map including their reward points.
 $query;
 export function getEntriesWithRewards(): Result<Vec<Entry>, string> {
   try {
     return Result.Ok(entryStorage.values());
   } 
+  catch (error) {
+    return Result.Err(`An error occurred: ${error}`);
+  }
+};
+// Establish the number of entries in the entryStorage Map.
+$query;
+export function entriesWithRewardsLength() : Result<number, string>  {
+  try {
+    return Result.Ok(Number(entryStorage.len()));
+  }   
   catch (error) {
     return Result.Err(`An error occurred: ${error}`);
   }
